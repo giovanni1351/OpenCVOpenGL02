@@ -14,8 +14,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/core.hpp>
 
-#define LAR 400 // largula da sua janela Windows
-#define ALT 400 // altura da sua janela Windows
+#define LAR 700 // largula da sua janela Windows
+#define ALT 700 // altura da sua janela Windows
 #define dimTx 256
 using namespace std;
 using namespace cv;
@@ -67,6 +67,8 @@ GLfloat dx = 0, dy = 0, dz = 0;
 double velocidadeRobo = 0.2;
 float Pos_inicial_Roboy;
 float Pos_inicial_RoboX;
+GLfloat Robox_Antes;
+GLfloat Roboy_Antes;
 GLfloat RoboX= Pos_inicial_RoboX, RoboY= Pos_inicial_Roboy;
 
 int pesx=-200, pesy=-200, pesz=200;
@@ -144,6 +146,8 @@ void InicializaTextura() {
     glBindTexture(GL_TEXTURE_2D, texName);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	
 }
 void CarregaTextura() {
 
@@ -229,12 +233,12 @@ void Desenha(void)
 
 	// define a cor dos objetos que vÃ£o ser construÃ­dos
 	//glColor3f(0.0f, 0.0f, 0.0f);
-	glEnable(GL_TEXTURE_2D);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dimTx, dimTx, 0, GL_RGBA, GL_UNSIGNED_BYTE, imTex);
+	//glEnable(GL_TEXTURE_2D);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dimTx, dimTx, 0, GL_RGBA, GL_UNSIGNED_BYTE, imTex);
 
 	// Desenha o teapot com a cor corrente (wire-frame)
 	DesenhaJOGO();
-	glDisable(GL_TEXTURE_2D);
+	//glDisable(GL_TEXTURE_2D);
 
 	// Executa os comandos OpenGL
 	glutSwapBuffers();  // troca de buffer para acelerar a cena
@@ -298,11 +302,16 @@ void LerOBJ() {
 void DesenhaJOGO() {
 	
 	glPushMatrix();
-	glColor3f(0.00f, 1.00f, 0.00f);
+		glEnable(GL_TEXTURE_2D);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dimTx, dimTx, 0, GL_RGBA, GL_UNSIGNED_BYTE, imTex);
+
+		glColor3f(0.00f, 1.00f, 0.00f);
 		glRotatef(rotx, 1, 0,0);
 		glRotatef(roty, 0, 1, 0);
 		glRotatef(rotz, 0, 0, 1);
 		DesenhaMalhaTexturizada();
+		glDisable(GL_TEXTURE_2D);
+
 	glPopMatrix();
 	
 	glPushMatrix();
@@ -324,9 +333,9 @@ void DesenhaJOGO() {
 			int i = 0;
 			for (const FaceVertex& vertex : face.vertices) {
 
-				face3[i][0] = vertices[vertex.vertexIndex].x;
-				face3[i][1] = vertices[vertex.vertexIndex].y;
-				face3[i][2] = vertices[vertex.vertexIndex].z;
+				face3[i][0] = vertices[vertex.vertexIndex+1].x;
+				face3[i][1] = vertices[vertex.vertexIndex+1].y;
+				face3[i][2] = vertices[vertex.vertexIndex+1].z;
 
 				if (vertex.normalIndex != -1) {
 					norm3[i][0] = normals[vertex.normalIndex + 1].nx;
@@ -764,9 +773,10 @@ void GerenciaMouse(int button, int state, int x, int y)
 void timer(int val){
 	jx = ((Desloc1[index].x)* 13.33)-60;
 	jy = (Desloc1[index].y* 10)-45;
+	Robox_Antes = RoboX;
+	Roboy_Antes = RoboY;
 	if (Desloc1[index].x > 9) { index = 0; RoboX = Pos_inicial_RoboX; RoboY = Pos_inicial_Roboy; }
 	//projetaVelocidade(Desloc1[index].x, Desloc1[index].y, Desloc1[index].tempo);
-	rot = ((atan2(jy - RoboY, jx - RoboX)*180)/ 3.14159265359)+90;
 	if ((((Desloc1[index].x) * 13.33) - 60) - RoboX < 0) {
 		RoboX -= velocidadeRobo;
 	}
@@ -779,6 +789,8 @@ void timer(int val){
 	else {
 		RoboY += velocidadeRobo;
 	}
+	rot = ((atan2(Roboy_Antes - RoboY, Robox_Antes - RoboX) * 180) / 3.14159265359) - 90;
+
 	if (Atualiza_lista_Robo == 2) {
 		T_Ponto atualRobo;
 		atualRobo.tempo = Desloc1[index].tempo;
